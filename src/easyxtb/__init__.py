@@ -1,7 +1,8 @@
 import logging
 
 from .configuration import config, config_file
-from .configuration import PLUGIN_DIR, CALCS_DIR, TEMP_DIR, BIN_DIR, XTB_BIN, CREST_BIN
+from .configuration import PLUGIN_DIR, CALCS_DIR, TEMP_DIR, BIN_DIR
+from .program import Program, XTB, CREST
 from .geometry import Atom, Geometry
 from .calculate import Calculation
 from . import calculate, configuration, convert, format

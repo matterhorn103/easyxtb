@@ -15,7 +15,6 @@ import logging
 import os
 import platform
 from pathlib import Path
-from shutil import which
 
 
 logger = logging.getLogger(__name__)
@@ -149,61 +148,6 @@ if "version" not in config or config["version"] != easyxtb_VERSION:
 BIN_DIR = PLUGIN_DIR / "bin"
 logger.debug(f"{BIN_DIR=}")
 BIN_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def find_bin(program: str) -> Path | None:
-    """Return path to xtb or CREST binary as Path object, or None."""
-    bin_name = f"{program}.exe" if platform.system() == "Windows" else program
-    bin_path = None
-    for possible_location in [
-        BIN_DIR / bin_name,  # Normal binary or symlink to it
-        BIN_DIR / program / bin_name,  # Old layout for xtb, current for CREST
-        BIN_DIR
-        / f"{program}-dist/bin/{bin_name}",  # Whole xtb distribution folder with nested binary directory
-    ]:
-        if possible_location.exists() and not possible_location.is_dir():
-            bin_path = possible_location
-            break
-    # Otherwise check the PATH
-    if not bin_path and which(bin_name) is not None:
-        bin_path = Path(which(bin_name))
-    logger.debug(f"{bin_name} binary location determined to be: {bin_path}")
-    return bin_path
-
-
-# Initialize and find the various binaries
-# Confirm that those loaded from the config can be found
-# Each global variable will be set to None if nothing found anywhere
-# Note that the binary paths are not actually saved to the config unless the user
-# actively does so
-if "xtb_bin" in config:
-    XTB_BIN = Path(config["xtb_bin"])
-    if not XTB_BIN.exists():
-        XTB_BIN = find_bin("xtb")
-else:
-    XTB_BIN = find_bin("xtb")
-if "crest_bin" in config:
-    CREST_BIN = Path(config["crest_bin"])
-    if not CREST_BIN.exists():
-        CREST_BIN = find_bin("crest")
-else:
-    CREST_BIN = find_bin("crest")
-
-
-if XTB_BIN is not None:
-    # Resolve any symlinks
-    if XTB_BIN.is_symlink():
-        XTB_BIN = XTB_BIN.readlink()
-    logger.debug(f"{XTB_BIN=}")
-    # Have to set environment variable XTBPATH so that parameterizations (e.g. of
-    # GFN0-xTB) are found
-    os.environ["XTBPATH"] = str(XTB_BIN.parent.parent / "share/xtb")
-
-if CREST_BIN is not None:
-    # Resolve any symlinks
-    if CREST_BIN.is_symlink():
-        CREST_BIN = CREST_BIN.readlink()
-    logger.debug(f"{CREST_BIN=}")
 
 
 def determine_threads() -> int:
