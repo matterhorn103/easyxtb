@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 dependencies = []
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: BSD License",
     "Development Status :: 4 - Beta",
     "Topic :: Scientific/Engineering :: Chemistry",
 ]
@@ -24,6 +24,9 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=8.3.3",
     "ruff>=0.7.2",
+]
+docs = [
+    "mkdocs>=1.6.1",
 ]
 
 [tool.ruff]
