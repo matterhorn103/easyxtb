@@ -6,6 +6,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Iterator
 
 from .convert import get_atomic_number, get_element_symbol
 from .format import cjson_dumps
@@ -16,8 +17,19 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Atom:
-    """An atom with an element symbol and 3D coordinates in ångstrom."""
-
+    """An individual atom with an element symbol and 3D coordinates in ångstrom.
+    
+    Attributes
+    ----------
+    element : str
+        The element's symbol.
+    x : float
+        The x-component of the atom's position in ångstrom.
+    y : float
+        The y-component of the atom's position in ångstrom.
+    z : float
+        The z-component of the atom's position in ångstrom.
+    """
     element: str
     x: float
     y: float
@@ -25,6 +37,14 @@ class Atom:
 
 
 class Geometry:
+    """A set of atoms within a 3D space with an associated overall charge and spin.
+
+    Provides class methods for creation from, and instance methods for writing to, the
+    XYZ and CJSON formats.
+
+    `spin` is the number of unpaired electrons, not the multiplicity, matching
+    the `--uhf` flag of `xtb`.
+    """
     def __init__(
         self,
         atoms: list[Atom],
@@ -32,16 +52,17 @@ class Geometry:
         spin: int = 0,
         _comment: str | None = None,
     ):
-        """A set of atoms within a 3D space for use in calculations with an associated
-        charge and spin.
-
-        Provides class methods for creation from, and instance methods for writing to,
-        XYZ and CJSON formats.
-
-        The coordinates should be provided as a list of `Atom` objects.
-
-        `spin` is the number of unpaired electrons.
         """
+        Attributes
+        ----------
+        atoms : list[Atom]
+            The `Atom` objects that collectively comprise the `Geometry`.
+        charge : int
+            The overall charge on the `Geometry` in terms of elementary charges.
+        spin : int
+            The number of unpaired electrons.
+        """
+        
         self.atoms = atoms
         self.charge = charge
         if spin >= 0:
@@ -50,12 +71,26 @@ class Geometry:
             raise ValueError("spin (number of unpaired electrons) cannot be negative")
         self._comment = _comment
 
-    def __iter__(self):
-        """Geometries are iterable over their Atoms."""
+    def __iter__(self) -> Iterator[Atom]:
+        """Iterate over the constituent atoms.
+        
+        This allows a `Geometry` to be iterated over using e.g.
+        
+        ```python
+        my_geom = easyxtb.Geometry.from_file("some_file.xyz")
+        for atom in my_geom:
+            atom.x += 1.0
+        ```
+        """
+        self.atoms.__iter__()
         return iter(self.atoms)
 
     def to_xyz(self, comment: str | None = None) -> list[str]:
-        "Generate an XYZ, as a list of lines, for the geometry."
+        """Generate an XYZ, as a list of lines, for the geometry.
+        
+        Optional text to include on the second line of the XYZ can be passed as
+        `comment`. If left as `None`, it defaults to `"xyz prepared by easyxtb"`.
+        """
         logger.debug("Generating an xyz, as a list of lines, for the geometry")
         if comment is None:
             comment = self._comment if self._comment else "xyz prepared by easyxtb"
@@ -106,6 +141,8 @@ class Geometry:
         """Write geometry to an XYZ file at the provided path.
 
         The file is written with a trailing newline.
+
+        Returns the location of the saved file for convenience.
         """
         logger.debug(f"Saving the geometry as an xyz file to {dest}")
         # Make sure it ends with a newline
@@ -126,13 +163,15 @@ class Geometry:
         With the default `prettyprint` option, all simple arrays (not themselves
         containing objects/dicts or arrays/lists) will be flattened onto a single line,
         while all other array elements and object members will be pretty-printed with
-        the specified indent level (2 spaces by default).
+        the specified indent level.
 
         `indent` and any `**kwargs` are passed to Python's `json.dumps()` as is, so the
         same values are valid e.g. `indent=0` will insert newlines while `indent=None`
         will afford a compact single-line representation.
 
         The file is written with a trailing newline.
+
+        Returns the location of the saved file for convenience.
         """
         logger.debug(f"Saving the geometry as a cjson file to {dest}")
         cjson = self.to_cjson()
@@ -143,7 +182,7 @@ class Geometry:
             f.write(cjson_string)
         return dest
 
-    def to_file(self, dest: os.PathLike, format: str = None) -> os.PathLike:
+    def write_file(self, dest: os.PathLike, format: str = None) -> os.PathLike:
         """Write geometry to an XYZ or CJSON file.
 
         The format can be specified by passing either ".xyz" or ".cjson" as the `format`
@@ -197,7 +236,7 @@ class Geometry:
 
     @classmethod
     def from_cjson(cls, cjson_dict: dict, charge: int = None, spin: int = None):
-        """Create a `Geometry` object from an CJSON in the form of a Python dict.
+        """Create a `Geometry` object from a CJSON in the form of a Python dict.
 
         If the CJSON does not specify the overall charge and spin, a neutral
         singlet is assumed, regardless of the chemical feasibility of that, unless the
@@ -221,7 +260,7 @@ class Geometry:
         return Geometry(atoms, charge, spin)
 
     @classmethod
-    def from_file(
+    def load_file(
         cls,
         file: os.PathLike,
         format: str = None,
@@ -231,9 +270,9 @@ class Geometry:
     ):
         """Create a `Geometry` object from an XYZ or CJSON file.
 
-        The format can be specified by passing either ".xyz" or ".cjson" as the `format`
-        argument, or it can be left to automatically be detected based on the filename
-        ending.
+        The format can be specified by passing either `".xyz"` or `".cjson"` as the
+        `format` argument, or it can be left to automatically be detected based on the
+        filename suffix.
 
         Charge and spin are handled as by the `from_xyz()` and `from_cjson()` methods:
         - if the file is a CJSON, charge and spin will be read from the file if present,
