@@ -12,6 +12,13 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
 ]
 
+[project.optional-dependencies]
+docs = [
+    "mkdocs-material>=9.5.49",
+    "mkdocs>=1.6.1",
+    "mkdocstrings[python]>=0.27.0",
+]
+
 [project.urls]
 Homepage = "https://github.com/matterhorn103/easyxtb"
 Issues = "https://github.com/matterhorn103/easyxtb/issues"
@@ -24,11 +31,6 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=8.3.3",
     "ruff>=0.7.2",
-]
-docs = [
-    "mkdocs-material>=9.5.49",
-    "mkdocs>=1.6.1",
-    "mkdocstrings[python]>=0.27.0",
 ]
 
 [tool.ruff]
