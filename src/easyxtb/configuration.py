@@ -28,6 +28,9 @@ default_config_file = Path(__file__).with_name("default_config.json")
 
 
 def _load_paths():
+    global CALCS_DIR
+    global TEMP_DIR
+    global BIN_DIR
     # User can customize the directory used as directory for the calculations
     # Don't use `tmp` or similar because it doesn't usually persist between reboots
     if "calcs_dir" in config:
@@ -97,7 +100,6 @@ def _determine_threads() -> int:
     sensible_threads = int(n_threads // 1.3)
     return sensible_threads
 
-
 # Now for everything that should run when the module is loaded
 
 # Use an OS-appropriate data location to store all data related to the package
@@ -113,7 +115,6 @@ else:
     PLUGIN_DIR = Path.home() / ".local/share/easyxtb"
 logger.debug(f"{PLUGIN_DIR=}")
 config_file = PLUGIN_DIR / "config.json"
-
 # Look for config file in plugin directory
 if config_file.exists():
     with open(config_file, encoding="utf-8") as f:
@@ -143,6 +144,7 @@ except PermissionError:
     logger.error(error_msg)
     print(error_msg)
     raise PermissionError(error_msg)
+_load_paths()
 # Save the initialized configuration to a new config file
 if init:
     save_config()
