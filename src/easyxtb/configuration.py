@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # Current version of package
 # Hard code for now, obviously not ideal though
-easyxtb_VERSION = "0.8.1"
+easyxtb_VERSION = "0.9.0"
 
 # File containing the default configuration for new users
 default_config_file = Path(__file__).with_name("default_config.json")
