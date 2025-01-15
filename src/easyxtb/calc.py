@@ -449,7 +449,7 @@ class Calculation:
             options={
                 "gfn": method if method else config["method"],
                 "alpb": solvation if solvation else config["solvent"],
-                "p": n_proc if n_proc else config["n_proc"],
+                "P": n_proc if n_proc else config["n_proc"],
             }
             | options,
         )
@@ -476,7 +476,7 @@ class Calculation:
             options={
                 "gfn": method if method else config["method"],
                 "alpb": solvation if solvation else config["solvent"],
-                "p": n_proc if n_proc else config["n_proc"],
+                "P": n_proc if n_proc else config["n_proc"],
             }
             | options,
         )
@@ -501,7 +501,7 @@ class Calculation:
         options = {
             "gfn": method if method else config["method"],
             "alpb": solvation if solvation else config["solvent"],
-            "p": n_proc if n_proc else config["n_proc"],
+            "P": n_proc if n_proc else config["n_proc"],
         } | options
         return cls(
             program=XTB,
