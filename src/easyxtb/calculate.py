@@ -80,20 +80,27 @@ def frequencies(
     return calc.frequencies
 
 
-def opt_freq(
+def smartopt(
     input_geometry: Geometry,
     level: str | None = None,
     solvation: str | None = None,
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
-    auto_restart: bool = True,
-) -> tuple[Geometry, list[dict]]:
-    """Optimize geometry then calculate vibrational frequencies.
+) -> Geometry:
+    """Optimize the geometry repeatedly until a minimum is reached.
+    
+    If xtb is run with the `ohess` runtype (an optimization and subsequent frequency
+    calculation) and the program detects one or more imaginary frequencies in the
+    result, it distorts the optimized geometry away from the stationary point and
+    recommends to restart the calculation from that distorted geometry.
 
-    If a negative frequency is detected by xtb, it recommends to restart the calculation
-    from a distorted geometry that it provides, so this is done automatically if
-    applicable by default.
+    The `smartopt` function takes advantage of this and does that restart automatically,
+    and will continue to restart the optimizations until a minimum is reached.
+
+    Be aware that this could in theory get stuck in an endless loop if xtb never finds
+    a minimum, though in practice it seems to only need at maximum a couple of
+    iterations.
     """
 
     calc = Calculation.ohess(
@@ -110,7 +117,7 @@ def opt_freq(
     # (Generated automatically by xtb if result had negative frequency)
     # If found, rerun
     distorted_geom_file = calc.output_file.with_name("xtbhess.xyz")
-    while distorted_geom_file.exists() and auto_restart:
+    while distorted_geom_file.exists():
         calc = Calculation.ohess(
             input_geometry=Geometry.load_file(
                 distorted_geom_file, charge=input_geometry.charge, spin=input_geometry.spin
@@ -123,7 +130,7 @@ def opt_freq(
         )
         calc.run()
 
-    return calc.output_geometry, calc.frequencies
+    return calc.output_geometry
 
 
 def orbitals(
