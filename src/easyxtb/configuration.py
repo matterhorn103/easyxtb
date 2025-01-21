@@ -34,7 +34,7 @@ def _load_paths():
     # User can customize the directory used as directory for the calculations
     # Don't use `tmp` or similar because it doesn't usually persist between reboots
     if "calcs_dir" in config:
-        CALCS_DIR = Path(config["calcs_dir"])
+        CALCS_DIR = Path(config["calcs_dir"]).resolve()
         logger.debug("Using custom calculations directory from user config")
     else:
         CALCS_DIR = Path(PLUGIN_DIR) / "calcs"
