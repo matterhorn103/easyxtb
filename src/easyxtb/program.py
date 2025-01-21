@@ -113,7 +113,8 @@ CREST = Program(
 
 # Have to set environment variable XTBPATH so that parameterizations (e.g. of
 # GFN0-xTB) are found
-os.environ["XTBPATH"] = str(XTB.path.parent.parent / "share/xtb")
+if XTB.path:
+    os.environ["XTBPATH"] = str(XTB.path.parent.parent / "share/xtb")
 
 logger.debug(f"{XTB.path=}")
 logger.debug(f"{CREST.path=}")
