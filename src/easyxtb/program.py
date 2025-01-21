@@ -45,6 +45,7 @@ def find_bin(program: str) -> Path | None:
 
 
 def resolve_bin(program: str) -> Path | None:
+    """Get a resolved, absolute path to the requested program, or None if not found."""
     if f"{program}_bin" in config:
         path = Path(config[f"{program}_bin"])
         if not path.exists():
@@ -52,9 +53,8 @@ def resolve_bin(program: str) -> Path | None:
     else:
         path = find_bin(program)
     if path is not None:
-        # Resolve any symlinks
-        if path.is_symlink():
-            path = path.readlink()
+        # Resolve to make path absolute and simultaneously follow any symlinks
+        path = path.resolve()
     return path
 
 
