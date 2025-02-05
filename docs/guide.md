@@ -108,7 +108,7 @@ The package provides two APIs for running calculations: a [function-based API](c
 
 ### Using the function-based API with the `calculate` module
 
-Functions are provided to directly obtain key results with xtb (`energy`, `optimize`, `frequencies`, `opt_freq`, `orbitals`) or CREST (`conformers`, `tautomerize`, `protonate`, `deprotonate`, `solvate`). These can be found within the `easyxtb.calculate` module.
+Functions are provided to directly obtain key results with xtb (`energy`, `optimize`, `frequencies`, `smartopt`, `orbitals`) or CREST (`conformers`, `tautomerize`, `protonate`, `deprotonate`, `solvate`). These can be found within the `easyxtb.calculate` module.
 
 For example, we can get an optimized geometry quickly with e.g.:
 
@@ -132,11 +132,12 @@ print(freqs[0])
 We were returned at least one negative frequency!
 
 The xtb team recommend generally using the `ohess` (optimization followed by a frequency calculation) runtype as, in the case of negative frequencies, xtb will produce a distorted geometry along the imaginary mode.
-The `opt_freq()` calculation function takes advantage of this and will continue reoptimizing using these distorted geometries until a minimum is reached, so is more reliable in getting what we want:
+The `smartopt()` calculation function takes advantage of this and will continue reoptimizing using these distorted geometries until a minimum is reached, so is more reliable in getting what we want:
 
 ```python
-output_geom, output_freqs = easyxtb.calculate.opt_freq(input_geom, level="normal", solvation="water")
-print(output_freqs[0])
+outimized = easyxtb.calculate.smartopt(input_geom, level="normal", solvation="water")
+freqs = easyxtb.calculate.frequencies(optimized, solvation="water")
+print(freqs[0])
 # Prints:
 {'mode': 1, 'symmetry': 'a', 'frequency': 70.0622, 'reduced_mass': 13.4154, 'ir_intensity': 6.422, 'raman_scattering_activity': 0.0, 'eigenvectors': [[0.0, 0.0, -0.28], [-0.0, 0.0, -0.0], [-0.0, -0.0, 0.25], [0.0, -0.0, 0.04], [0.0, -0.0, -0.24], [-0.0, 0.0, -0.0], [-0.0, 0.0, 0.29], [-0.0, 0.0, 0.15], [0.0, -0.0, 0.02], [0.0, -0.0, -0.12], [0.0, 0.0, -0.15], [0.0, -0.0, 0.55], [0.0, 0.01, -0.56], [0.0, 0.0, -0.19]]}
 ```
