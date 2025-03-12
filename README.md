@@ -12,6 +12,8 @@ These methods provide fast and reasonably accurate calculation of **G**eometries
 By taking care of file I/O and command line invocation it aims to make it trivial to run xtb programmatically.
 The package's design enables both straightforward acquisition of key results and full control over run options.
 
+`easyxtb` is available to download from [PyPI](https://pypi.org/project/easyxtb/) and can be installed with `pip` or any PyPI-compatible package manager.
+
 The `easyxtb` package also forms the basis for [`avo_xtb`](https://github.com/matterhorn103/avo_xtb), a plugin for the 3D chemical visualization software [Avogadro 2](https://two.avogadro.cc) that provides an in-app interface to the xtb program for quick and accurate calculations, as well as the CREST program for extended functionality.
 
 ## Usage
@@ -26,7 +28,7 @@ input_geom = easyxtb.Geometry.from_file(Path.home() / "calcs/benzoic_acid.xyz")
 optimized = easyxtb.calculate.optimize(input_geom, level="normal", solvation="water")
 ```
 
-An guide for [getting started](guide.md) and details of the API can be found in the [documentation](index.md).
+An guide for [getting started](https://easyxtb.readthedocs.io/en/latest/guide/) and details of the API can be found in the [documentation](https://easyxtb.readthedocs.io/en/latest/).
 
 ## Requirements
 
