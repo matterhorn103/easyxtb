@@ -27,7 +27,7 @@ def energy(
         solvation=solvation,
         method=method,
         n_proc=n_proc,
-        orbitals=False,
+        molden=False,
         options=options,
     )
     calc.run()
