@@ -9,6 +9,8 @@ quick and intuitive fashion, without the user having to worry about `Calculation
 objects.
 """
 
+from collections.abc import Callable
+
 from .calc import Calculation
 from .geometry import Geometry
 
@@ -19,6 +21,7 @@ def energy(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> float:
     """Calculate the energy in hartree of the given geometry."""
 
@@ -30,7 +33,7 @@ def energy(
         molden=False,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.energy
 
 
@@ -41,6 +44,7 @@ def optimize(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> Geometry:
     """Optimize the geometry, starting from the provided initial geometry, and return
     the optimized geometry."""
@@ -53,7 +57,7 @@ def optimize(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     # Check for convergence
     # TODO
     # Will need to look for "FAILED TO CONVERGE"
@@ -66,6 +70,7 @@ def frequencies(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> list[dict]:
     """Calculate vibrational frequencies and return results as a list of dicts."""
 
@@ -76,7 +81,7 @@ def frequencies(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.frequencies
 
 
@@ -87,6 +92,7 @@ def smartopt(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> Geometry:
     """Optimize the geometry repeatedly until a minimum is reached.
 
@@ -111,7 +117,7 @@ def smartopt(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
 
     # Check for distorted geometry
     # (Generated automatically by xtb if result had negative frequency)
@@ -128,7 +134,7 @@ def smartopt(
             n_proc=n_proc,
             options=options,
         )
-        calc.run()
+        calc.run(on_output_line=on_output_line)
 
     return calc.output_geometry
 
@@ -139,6 +145,7 @@ def orbitals(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> str:
     """Calculate molecular orbitals for given geometry.
 
@@ -154,7 +161,7 @@ def orbitals(
         molden=True,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.output_molden
 
 
@@ -166,6 +173,7 @@ def conformers(
     hess: bool = False,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> list[dict]:
     """Simulate a conformer ensemble and return set of conformer Geometries and energies.
 
@@ -184,7 +192,7 @@ def conformers(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.conformers
 
 
@@ -194,6 +202,7 @@ def tautomerize(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> list[dict]:
     """Sample prototropic tautomers and return set of tautomer Geometries and energies.
 
@@ -207,7 +216,7 @@ def tautomerize(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.tautomers
 
 
@@ -217,6 +226,7 @@ def protonate(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> list[dict]:
     """Screen possible protonation sites and return set of tautomer Geometries and energies.
 
@@ -230,7 +240,7 @@ def protonate(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.tautomers
 
 
@@ -240,6 +250,7 @@ def deprotonate(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> list[dict]:
     """Screen possible deprotonation sites and return set of tautomer Geometries and energies.
 
@@ -253,7 +264,7 @@ def deprotonate(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.tautomers
 
 
@@ -264,6 +275,7 @@ def solvate(
     method: int | None = None,
     n_proc: int | None = None,
     options: dict | None = None,
+    on_output_line: Callable[[str], None] | None = None,
 ) -> Geometry:
     """Grow a solvent shell around a solute for a total of `nsolv` solvent molecules.
 
@@ -279,5 +291,5 @@ def solvate(
         n_proc=n_proc,
         options=options,
     )
-    calc.run()
+    calc.run(on_output_line=on_output_line)
     return calc.output_geometry

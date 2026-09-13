@@ -11,6 +11,7 @@ on the command line and is used by all other calculation options.
 import logging
 import os
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from shutil import rmtree
 
@@ -162,9 +163,22 @@ class Calculation:
             command = self._build_xtb_command(self.input_geometry)
         return command
 
-    def run(self):
+    def run(self, on_output_line: Callable[[str], None] | None = None):
         """Run calculation with xtb or crest, storing the output, the saved output file,
-        and the parsed energy, as well as the `subprocess` object."""
+        and the parsed energy, as well as the `subprocess` object.
+
+        Parameters
+        ----------
+        on_output_line
+            Optional callback invoked with each line of the program's standard output as
+            it is produced, which allows a long calculation to be followed while it is
+            still running. The line is passed with its trailing newline removed.
+
+            The full output is still collected and stored in `self.output` either way,
+            so the callback is purely additional. Exceptions raised by the callback are
+            logged and discarded, so a faulty progress handler cannot abort a
+            calculation that is otherwise proceeding normally.
+        """
 
         logger.debug(f"Calculation of runtype {self.runtype} has been asked to run")
         logger.debug(f"The calculation will be run in the following directory: {self.calc_dir}")
@@ -210,7 +224,12 @@ class Calculation:
         logger.debug(
             f"Running calculation in new subprocess using {self.calc_dir} as the working directory..."
         )
-        subproc = subprocess.run(command, capture_output=True, encoding="utf-8", cwd=self.calc_dir)
+        if on_output_line is None:
+            subproc = subprocess.run(
+                command, capture_output=True, encoding="utf-8", cwd=self.calc_dir
+            )
+        else:
+            subproc = self._run_streaming(command, on_output_line)
         logger.debug("...calculation complete.")
 
         # Store output
@@ -228,6 +247,52 @@ class Calculation:
             self.process_crest()
         else:
             self.process_xtb()
+
+    def _run_streaming(
+        self,
+        command: list[str],
+        on_output_line: Callable[[str], None],
+    ) -> subprocess.CompletedProcess:
+        """Run `command`, passing each line of its standard output to `on_output_line`
+        as it appears, and return an equivalent `CompletedProcess`.
+
+        `xtb` and `crest` both flush their standard output line by line, so the lines
+        arrive while the calculation is still running rather than all at once at the
+        end.
+        """
+
+        # Standard error goes to a file rather than a second pipe. Only stdout is being
+        # read here, so a pipe for stderr could fill up and block the program forever
+        # while it waits for somebody to drain it.
+        stderr_file = self.calc_dir / "stderr.out"
+        stdout_lines = []
+
+        with open(stderr_file, "w", encoding="utf-8") as stderr_handle:
+            with subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=stderr_handle,
+                encoding="utf-8",
+                cwd=self.calc_dir,
+            ) as proc:
+                for line in proc.stdout:
+                    stdout_lines.append(line)
+                    try:
+                        on_output_line(line.rstrip("\n"))
+                    except Exception:
+                        # The calculation itself is fine, so let it carry on to
+                        # completion; only the reporting of its progress is broken.
+                        logger.exception("Callback raised on output line, ignoring")
+
+        with open(stderr_file, encoding="utf-8") as f:
+            stderr_output = f.read()
+
+        return subprocess.CompletedProcess(
+            args=proc.args,
+            returncode=proc.returncode,
+            stdout="".join(stdout_lines),
+            stderr=stderr_output,
+        )
 
     def process_xtb(self):
         # First do generic operations that apply to many calculation types
